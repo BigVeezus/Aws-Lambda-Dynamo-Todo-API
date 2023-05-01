@@ -1,0 +1,68 @@
+service: aws-node-project
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    TABLE_NAME:
+      Ref: myTable
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "*"
+
+functions:
+  function1:
+    handler: index.handler
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+  create:
+    handler: index.createTodo
+    events:
+      - http:
+          path: todos
+          method: post
+          cors: true
+  update:
+    handler: src/handler/updateData.updateTodo
+    events:
+      - http:
+          path: todos/{id}
+          method: put
+          cors: true
+  delete:
+    handler: src/handler/deleteData.deleteTodo
+    events:
+      - http:
+          path: todos/{id}
+          method: delete
+          cors: true
+
+resources:
+  Resources:
+    myTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: myTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
